@@ -65,8 +65,8 @@ class Blinker {
   void updateSequence(std::vector<Step> sequence, int repetitions);
   void step();
 
-  roo_scheduler::SingletonTask stepper_;
   Led& led_;
+  roo_scheduler::SingletonTask stepper_;
   std::vector<Step> sequence_;
   int repetitions_;
   int pos_;
