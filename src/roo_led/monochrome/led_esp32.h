@@ -1,6 +1,6 @@
 #pragma once
 
-#include "roo_led/led.h"
+#include "roo_led/monochrome/led.h"
 
 #if defined(ESP32)
 
@@ -14,11 +14,11 @@ static constexpr int kDuty = 1 << kDutyRes;
 
 static constexpr int kFreq = 40000;
 
-class GpioLed : public Led {
+class GpioMonochromeLed : public MonochromeLed {
  public:
   enum Mode { ON_HIGH, ON_LOW };
 
-  GpioLed(int gpio_num, Mode mode = ON_LOW,
+  GpioMonochromeLed(int gpio_num, Mode mode = ON_LOW,
           ledc_timer_t timer_num = LEDC_TIMER_0,
           ledc_channel_t channel = LEDC_CHANNEL_0);
 
@@ -34,9 +34,9 @@ class GpioLed : public Led {
 
 // #if CONFIG_IDF_TARGET_ESP32C3
 
-class BuiltinLed : public GpioLed {
+class BuiltinLed : public GpioMonochromeLed {
  public:
-  BuiltinLed() : GpioLed(8, ON_LOW) {}
+  BuiltinLed() : GpioMonochromeLed(8, ON_LOW) {}
 };
 
 // #endif

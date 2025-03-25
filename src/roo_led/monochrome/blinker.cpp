@@ -1,4 +1,4 @@
-#include "roo_led/blinker.h"
+#include "roo_led/monochrome/blinker.h"
 
 #include "roo_led.h"
 #include "roo_logging.h"
@@ -7,40 +7,41 @@ using namespace roo_time;
 
 namespace roo_led {
 
-Blinker::Blinker(Led& led, roo_scheduler::Scheduler& scheduler)
+Blinker::Blinker(MonochromeLed& led, roo_scheduler::Scheduler& scheduler)
     : led_(led),
       stepper_(scheduler, [this]() { step(); }),
       sequence_(),
       pos_(0) {}
 
 void Blinker::loop(std::vector<Step> sequence) {
-  updateSequence(std::move(sequence), -1);
+  updateSequence(std::move(sequence), -1, 0);
 }
 
-void Blinker::repeat(std::vector<Step> sequence, int repetitions) {
-  updateSequence(std::move(sequence), repetitions - 1);
+void Blinker::repeat(std::vector<Step> sequence, int repetitions,
+                     uint16_t terminal_level) {
+  updateSequence(std::move(sequence), repetitions - 1, terminal_level);
 }
 
-void Blinker::execute(std::vector<Step> sequence) {
-  updateSequence(std::move(sequence), 0);
+void Blinker::execute(std::vector<Step> sequence, uint16_t terminal_level) {
+  updateSequence(std::move(sequence), 0, terminal_level);
 }
 
-void Blinker::turnOn() {
-  updateSequence({}, 0);
-  led_.turnOn();
-}
+void Blinker::set(uint16_t intensity) { updateSequence({}, 0, intensity); }
 
-void Blinker::turnOff() {
-  updateSequence({}, 0);
-  led_.turnOff();
-}
+void Blinker::turnOn() { set(65535); }
 
-void Blinker::updateSequence(std::vector<Step> sequence, int repetitions) {
+void Blinker::turnOff() { set(0); }
+
+void Blinker::updateSequence(std::vector<Step> sequence, int repetitions,
+                             uint16_t terminal_level) {
   sequence_ = std::move(sequence);
+  terminal_level_ = terminal_level;
   repetitions_ = repetitions;
   pos_ = 0;
   if (!sequence_.empty() && !stepper_.is_scheduled()) {
     stepper_.scheduleNow(roo_scheduler::PRIORITY_ELEVATED);
+  } else {
+    led_.setLevel(terminal_level_);
   }
 }
 
@@ -49,6 +50,7 @@ void Blinker::step() {
   do {
     if (pos_ >= sequence_.size()) {
       sequence_.clear();
+      led_.setLevel(terminal_level_);
       return;
     }
     const Step& s = sequence_[pos_];

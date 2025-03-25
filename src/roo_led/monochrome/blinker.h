@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include "roo_led/led.h"
+#include "roo_led/monochrome/led.h"
 #include "roo_logging.h"
 #include "roo_scheduler.h"
 #include "roo_time.h"
@@ -44,30 +44,36 @@ constexpr Step Hold(roo_time::Interval duration);
 
 class Blinker {
  public:
-  Blinker(Led& led, roo_scheduler::Scheduler& scheduler);
+  Blinker(MonochromeLed& led, roo_scheduler::Scheduler& scheduler);
 
   // Infinite loop of steps.
   void loop(std::vector<Step> sequence);
 
   // Specified count of repetitions of steps.
-  void repeat(std::vector<Step> sequence, int repetitions);
+  void repeat(std::vector<Step> sequence, int repetitions,
+              uint16_t terminal_level = 0);
 
   // Executes the sequence once.
-  void execute(std::vector<Step> sequence);
+  void execute(std::vector<Step> sequence, uint16_t terminal_level = 0);
 
-  // Enables the LED.
+  // Enables the LED at the specified intensity.
+  void set(uint16_t intensity);
+
+  // Enables the LED at the maximum intensity.
   void turnOn();
 
   // Disables the LED.
   void turnOff();
 
  private:
-  void updateSequence(std::vector<Step> sequence, int repetitions);
+  void updateSequence(std::vector<Step> sequence, int repetitions,
+                      uint16_t terminal_level);
   void step();
 
-  Led& led_;
+  MonochromeLed& led_;
   roo_scheduler::SingletonTask stepper_;
   std::vector<Step> sequence_;
+  uint16_t terminal_level_;
   int repetitions_;
   int pos_;
 };

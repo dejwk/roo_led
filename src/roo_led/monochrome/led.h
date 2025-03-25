@@ -5,7 +5,7 @@
 
 namespace roo_led {
 
-class Led {
+class MonochromeLed {
  public:
   virtual void setLevel(uint16_t level) = 0;
 

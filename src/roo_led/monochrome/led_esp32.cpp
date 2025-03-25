@@ -1,5 +1,5 @@
-#include "roo_led/led_esp32.h"
-
+#include "roo_led/monochrome/led_esp32.h"
+#include "roo_logging.h"
 #include "esp_err.h"
 
 #if defined(ESP32)
@@ -7,8 +7,9 @@
 namespace roo_led {
 namespace esp32 {
 
-GpioLed::GpioLed(int gpio_num, Mode mode, ledc_timer_t timer_num,
-                 ledc_channel_t channel)
+GpioMonochromeLed::GpioMonochromeLed(int gpio_num, Mode mode,
+                                     ledc_timer_t timer_num,
+                                     ledc_channel_t channel)
     : channel_(channel), mode_(mode) {
   ledc_timer_config_t ledc_timer = {.speed_mode = LEDC_LOW_SPEED_MODE,
                                     .duty_resolution = kDutyRes,
@@ -30,12 +31,14 @@ GpioLed::GpioLed(int gpio_num, Mode mode, ledc_timer_t timer_num,
   ledc_fade_func_install(0);
 }
 
-void GpioLed::setLevel(uint16_t level) {
+void GpioMonochromeLed::setLevel(uint16_t level) {
+  LOG(INFO) << "SETTING LEVEL " << level;
   ledc_set_duty(LEDC_LOW_SPEED_MODE, channel_, dutyForLevel(level));
   ledc_update_duty(LEDC_LOW_SPEED_MODE, channel_);
 }
 
-void GpioLed::fade(uint16_t target_level, roo_time::Interval duration) {
+void GpioMonochromeLed::fade(uint16_t target_level,
+                             roo_time::Interval duration) {
   ESP_ERROR_CHECK(ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, channel_,
                                           dutyForLevel(target_level),
                                           duration.inMillis()));
@@ -44,11 +47,11 @@ void GpioLed::fade(uint16_t target_level, roo_time::Interval duration) {
       ledc_fade_start(LEDC_LOW_SPEED_MODE, channel_, LEDC_FADE_NO_WAIT));
 }
 
-int GpioLed::dutyForLevel(uint16_t level) const {
+int GpioMonochromeLed::dutyForLevel(uint16_t level) const {
   if (mode_ == ON_LOW) {
     level = 65535 - level;
   }
-  return level * kDuty / 65536;
+  return (uint32_t)level * kDuty / 65536;
 }
 
 }  // namespace esp32
